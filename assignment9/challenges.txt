@@ -1,0 +1,1 @@
+This was even easier, just use the full X-path and then call `.text` and `.get_attribute('href')` and that's it.
