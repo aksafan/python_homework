@@ -20,9 +20,15 @@ def print_exception_info(e):
 def read_employees():
     key_value_pairs = {}
     rows = []
+    file_path = "../csv/employees.csv"
 
-    with open("../csv/employees.csv", "r") as file:
-        try:
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+
+        return None
+
+    try:
+        with open(file_path, "r") as file:
             reader = csv.reader(file)
             for i, row in enumerate(reader):
                 if i == 0:
@@ -31,10 +37,13 @@ def read_employees():
                     rows.append(row)
 
             key_value_pairs["rows"] = rows
-        except Exception as e:
-            print_exception_info(e)
-        else:
-            return key_value_pairs
+
+        return key_value_pairs
+
+    except Exception as e:
+        print_exception_info(e)
+
+        return None
 
 employees = read_employees()
 print(employees)
@@ -55,16 +64,15 @@ def first_name(row_number):
 # Task 5
 def employee_find(employee_id):
     def employee_match(row):
-        return int(row[employee_id_column]) == employee_id
+        if employee_id_column < len(row) and row[employee_id_column] is not None and row[employee_id_column].isnumeric():
+            return int(row[employee_id_column]) == employee_id
+
     matches = list(filter(employee_match, employees["rows"]))
 
     return matches
 
 # Task 6
 def employee_find_2(employee_id):
-    def employee_match(row):
-        return int(row[employee_id_column]) == employee_id
-
     matches = list(filter(lambda row: int(row[employee_id_column]) == employee_id, employees["rows"]))
 
     return matches
@@ -90,8 +98,21 @@ print(employee_dict(employees["rows"][0]))
 # Task 9
 def all_employees_dict():
     result = {}
-    for i, row in enumerate(employees["rows"]):
-        result[row[0]] = employee_dict(employees["rows"][i])
+    try:
+        employees_rows = employees["rows"]
+        iter(employees_rows)
+    except IndexError:
+        print("No rows in employees")
+
+        return result
+    except TypeError:
+        print("employees_rows is not iterable")
+
+        return result
+
+    for i, row in enumerate(employees_rows):
+        if len(row) > 0:
+            result[row[0]] = employee_dict(employees_rows[i])
 
     return result
 
@@ -114,8 +135,13 @@ def read_minutes():
         key_value_pairs = {}
         rows = []
 
-        with open(file_path, "r") as file:
-            try:
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+
+            return None
+
+        try:
+            with open(file_path, "r") as file:
                 reader = csv.reader(file)
                 for i, row in enumerate(reader):
                     if i == 0:
@@ -124,13 +150,19 @@ def read_minutes():
                         rows.append(tuple(row))
 
                 key_value_pairs["rows"] = rows
-            except Exception as e:
-                print_exception_info(e)
-            else:
-                return key_value_pairs
+
+            return key_value_pairs
+
+        except Exception as e:
+            print_exception_info(e)
+
+            return None
 
     minutes1 = get_csv_content("../csv/minutes1.csv")
     minutes2 = get_csv_content("../csv/minutes2.csv")
+
+    if not minutes1 or not minutes2:
+        print("Error loading one or both CSV files.")
 
     return minutes1, minutes2
 
@@ -156,21 +188,34 @@ minutes_list = create_minutes_list()
 print(minutes_set)
 
 # Task 15
-def write_sorted_list():
+def write_sorted_list(file_path="minutes.csv", with_backup = False):
     minutes_list = list(create_minutes_list())
     minutes_list.sort(reverse=False, key = lambda x: x[1])
     mapped_minutes_list = list(map(lambda x: (x[0], datetime.strftime(x[1], "%B %d, %Y")), minutes_list))
 
-    with open("minutes.csv", "w", newline="\n") as file:
-        try:
+    if with_backup and os.path.exists(file_path):
+        backup_path = file_path + ".backup"
+        print(f"Backing up existing file to {backup_path}")
+        os.rename(file_path, backup_path)
+
+    if not "fields" in minutes1:
+        print("Invalid or missing minutes1_fields")
+
+        return None
+
+    try:
+        with open(file_path, "w", newline="\n") as file:
             writer = csv.writer(file)
             writer.writerow(minutes1["fields"])
             for mapped_minute in mapped_minutes_list:
                 writer.writerow(mapped_minute)
-        except Exception as e:
-            print_exception_info(e)
-        else:
-            return mapped_minutes_list
+
+        return mapped_minutes_list
+
+    except Exception as e:
+        print_exception_info(e)
+
+        return None
 
 sorted_list = write_sorted_list()
 print(sorted_list)
