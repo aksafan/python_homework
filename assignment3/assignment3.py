@@ -1,4 +1,26 @@
 import pandas as pd
+import os
+
+def safe_write_csv(df, file_path, with_backup = False):
+    if with_backup and os.path.exists(file_path):
+        try:
+            backup_path = file_path + ".backup"
+            print(f"Backing up existing file to {backup_path}")
+            os.rename(file_path, backup_path)
+        except Exception as e:
+            print(f"Failed to back up file '{file_path}': {e}")
+
+            return False
+
+    try:
+        df.to_csv(file_path, index=False)
+        print(f"File saved as: {file_path}")
+
+        return True
+    except Exception as e:
+        print(f"Error writing CSV to '{file_path}': {e}")
+
+        return False
 
 print("Task 1.1")
 data = {'Name': ['Alice', 'Bob', 'charlie'],
@@ -18,7 +40,7 @@ task1_older["Age"] += 1
 print(task1_older)
 
 print("Task 1.4")
-task1_older.to_csv("employees.csv", index=False)
+safe_write_csv(task1_older, "employees.csv")
 
 print("Task 2.1")
 task2_employees = pd.read_csv("employees.csv")
@@ -30,9 +52,13 @@ json_data = {'Name': ['Eve', 'Frank'],
              'City': ['Miami', 'Seattle'],
              'Salary': [60000, 95000]}
 json_df = pd.DataFrame(json_data)
-json_df.to_json("additional_employees.json")
-json_employees = pd.read_json("additional_employees.json")
-print(json_employees)
+file_path = "additional_employees.json"
+json_df.to_json(file_path, orient="records")
+try:
+    json_employees = pd.read_json(file_path, orient="records")
+    print(json_employees)
+except ValueError as e:
+    print(f"Error reading JSON: {e}")
 
 print("Task 2.3")
 more_employees = pd.concat([task2_employees, json_employees], ignore_index=True)
@@ -82,6 +108,6 @@ print(clean_data)
 print("Task 4.7")
 clean_data["Name"] = clean_data["Name"].str.strip()
 clean_data["Name"] = clean_data["Name"].str.upper()
-clean_data["Department"] = clean_data["Name"].str.strip()
-clean_data["Department"] = clean_data["Name"].str.upper()
+clean_data["Department"] = clean_data["Department"].str.strip()
+clean_data["Department"] = clean_data["Department"].str.upper()
 print(clean_data)
