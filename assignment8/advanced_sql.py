@@ -108,6 +108,7 @@ with sqlite3.connect("../db/lesson.db") as conn:
             JOIN orders o ON o.employee_id = e.employee_id
             GROUP BY e.first_name, e.last_name
             HAVING Total_orders > 5
+            ORDER BY Total_orders DESC
         """
         cursor.execute(sql_statement)
         print_result(cursor.fetchall(), "Task 4: Aggregation with HAVING")
